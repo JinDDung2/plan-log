@@ -73,6 +73,7 @@ export default function PlannerApp() {
               onPrev={() => setDate((d) => addDays(d, -1))}
               onNext={() => setDate((d) => addDays(d, 1))}
               onToday={() => setDate(todayKey())}
+              onSelectDate={setDate}
             />
             <Button variant="ghost" onClick={() => setShowSettings((s) => !s)}>
               시간 설정
