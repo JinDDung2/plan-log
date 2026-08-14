@@ -31,6 +31,12 @@
    - scope: `frontend`, `backend`, `docs` (특정 영역이 아니면 생략 가능)
    - 예: `feat(frontend): Big3 입력 컴포넌트 추가`, `fix(backend): DynamoDB 쿼리 조건 오류 수정`, `docs: ADR 0001 작성`
 4. PR은 `.github/PULL_REQUEST_TEMPLATE.md` 양식을 따른다 (변경 이유, 영향 범위 명시). 이슈는 `.github/ISSUE_TEMPLATE/task.md` 양식을 따른다.
+5. 브랜치는 `main`, `develop` 두 개만 쓴다. `develop → main` PR은 아래 조건을 모두 만족해야 병합한다.
+   - `npm run build`, `npm run lint`, 타입체크가 모두 통과한 상태 (PR 본문에 결과 명시)
+   - Vercel Preview 배포로 실제 화면 동작을 확인함
+   - PR 작성자 본인이 diff 전체를 한 번 리뷰함 (`git diff main...develop`)
+   - 병합은 Squash merge로, main에는 `type(scope): 설명` 한 줄만 남긴다
+   - main에는 직접 push하지 않는다
 
 ## AI가 임의로 하면 안 되는 것
 
