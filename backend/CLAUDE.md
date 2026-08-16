@@ -22,7 +22,7 @@
 - Runtime: Node.js (LTS)
 - Language: TypeScript (strict mode)
 - Framework: Fastify 5 (plugin architecture)
-- Database: MySQL 9.7 (LTS) — 8.0은 2026년 4월 EOL이라 사용하지 않는다. 8.4 LTS보다 9.7 LTS를 쓰는 이유는 9.x Innovation 릴리스(9.0~9.6)에서 누적된 버그 수정이 반영된 최신 LTS 기준점이고, 지원 기간도 가장 길기(2034년까지) 때문이다.
+- Database: MySQL 9.7 (LTS)
 - ORM: Drizzle ORM (type-safe, SQL-like)
 - Logging: Pino (structured JSON logging)
 - Testing: Vitest, Playwright (API testing)
