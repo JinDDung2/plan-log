@@ -24,7 +24,7 @@ export default function BrainDump({ items, onAdd, onRemove }: Props) {
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col min-h-0">
       <h2 className="text-lg font-bold mb-2">Brain Dump</h2>
       <form
         onSubmit={(e) => {
