@@ -1,8 +1,22 @@
+export interface BrainDumpItem {
+  id: string;
+  text: string;
+}
+
+export interface TimeBlock {
+  id: string;
+  hour: number; // 0-23, start hour
+  half: 0 | 30; // which half-hour column it starts in
+  isFullHour: boolean; // false: occupies just the one 30-min cell (hour, half)
+  hourSpan: number; // only meaningful when isFullHour is true; number of consecutive hour-rows
+  content: string;
+}
+
 export interface DailyPlan {
   date: string; // YYYY-MM-DD
   bigThree: [string, string, string];
-  brainDump: string;
-  timeSlots: Record<string, string>; // key: "HH:MM" -> content
+  brainDumpItems: BrainDumpItem[];
+  blocks: TimeBlock[];
 }
 
 export interface PlannerSettings {
@@ -19,7 +33,7 @@ export function emptyPlan(date: string): DailyPlan {
   return {
     date,
     bigThree: ["", "", ""],
-    brainDump: "",
-    timeSlots: {},
+    brainDumpItems: [],
+    blocks: [],
   };
 }
