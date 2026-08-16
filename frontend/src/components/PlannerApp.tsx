@@ -76,6 +76,8 @@ export default function PlannerApp() {
     );
   };
 
+  // Dropping a Brain Dump card onto the grid copies its text into a new
+  // block; the original card stays in Brain Dump (see BigThree drop below).
   const handleDropItem = (hour: number, half: 0 | 30, itemId: string) => {
     setPlan((prev) => {
       if (!prev) return prev;
@@ -83,7 +85,6 @@ export default function PlannerApp() {
       if (!item) return prev;
       return {
         ...prev,
-        brainDumpItems: prev.brainDumpItems.filter((i) => i.id !== itemId),
         blocks: [
           ...prev.blocks,
           {
@@ -95,6 +96,20 @@ export default function PlannerApp() {
           },
         ],
       };
+    });
+  };
+
+  // Dropping a Brain Dump card onto a Big3 slot copies its text there too;
+  // the card stays in Brain Dump and the slot becomes an independent,
+  // freely-editable copy (not a live-synced reference).
+  const handleDropToBigThree = (index: number, itemId: string) => {
+    setPlan((prev) => {
+      if (!prev) return prev;
+      const item = prev.brainDumpItems.find((i) => i.id === itemId);
+      if (!item) return prev;
+      const next = [...prev.bigThree] as [string, string, string];
+      next[index] = item.text;
+      return { ...prev, bigThree: next };
     });
   };
 
@@ -210,7 +225,11 @@ export default function PlannerApp() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-6">
-            <BigThree values={plan.bigThree} onChange={updateBigThree} />
+            <BigThree
+              values={plan.bigThree}
+              onChange={updateBigThree}
+              onDropItem={handleDropToBigThree}
+            />
             <BrainDump
               items={plan.brainDumpItems}
               onAdd={addBrainDumpItem}
