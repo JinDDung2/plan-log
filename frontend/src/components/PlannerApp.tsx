@@ -251,7 +251,6 @@ export default function PlannerApp() {
               onAdd={addBrainDumpItem}
               onRemove={removeBrainDumpItem}
             />
-            <div className="flex-1" />
             <GratitudeJournal value={plan.gratitude} onChange={updateGratitude} />
           </div>
           <TimeGrid
