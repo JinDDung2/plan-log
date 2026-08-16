@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { DailyPlan, PlannerSettings } from "@/types";
 import { addDays, todayKey } from "@/lib/date";
 import { loadPlan, savePlan, loadSettings, saveSettings } from "@/lib/storage";
-import { buildHours } from "@/lib/timegrid";
+import { buildSlots, slotIndex } from "@/lib/timegrid";
 import { newId } from "@/lib/id";
 import DateNav from "@/components/DateNav";
 import BigThree from "@/components/BigThree";
@@ -43,7 +43,7 @@ export default function PlannerApp() {
 
   if (!plan || !settings) return null;
 
-  const hours = buildHours(settings.startHour, settings.endHour);
+  const slots = buildSlots(settings.startHour, settings.endHour);
 
   const updateBigThree = (index: number, value: string) => {
     setPlan((prev) => {
@@ -91,8 +91,7 @@ export default function PlannerApp() {
             id: newId(),
             hour,
             half,
-            isFullHour: false,
-            hourSpan: 1,
+            span: 1,
             content: item.text,
           },
         ],
@@ -131,21 +130,9 @@ export default function PlannerApp() {
     );
   };
 
-  const expandToFullHour = (id: string) => {
-    setPlan((prev) =>
-      prev
-        ? {
-            ...prev,
-            blocks: prev.blocks.map((b) =>
-              b.id === id ? { ...b, isFullHour: true, hourSpan: 1 } : b
-            ),
-          }
-        : prev
-    );
-  };
-
-  // Grow/shrink the block's end (bottom edge): moves through `hours` in
-  // display order so wrap-around past midnight stays correct.
+  // Grow/shrink the block's end (bottom edge), one 30-minute slot at a time.
+  // Moves through `slots` in display order so wrap-around past midnight
+  // stays correct. Called repeatedly during a single continuous drag.
   const growEnd = (id: string) => {
     setPlan((prev) => {
       if (!prev) return prev;
@@ -153,9 +140,9 @@ export default function PlannerApp() {
         ...prev,
         blocks: prev.blocks.map((b) => {
           if (b.id !== id) return b;
-          const startIdx = hours.indexOf(b.hour);
-          const maxSpan = hours.length - startIdx;
-          return { ...b, hourSpan: Math.min(b.hourSpan + 1, maxSpan) };
+          const startIdx = slotIndex(slots, b.hour, b.half);
+          const maxSpan = slots.length - startIdx;
+          return { ...b, span: Math.min(b.span + 1, maxSpan) };
         }),
       };
     });
@@ -167,15 +154,15 @@ export default function PlannerApp() {
         ? {
             ...prev,
             blocks: prev.blocks.map((b) =>
-              b.id === id ? { ...b, hourSpan: Math.max(1, b.hourSpan - 1) } : b
+              b.id === id ? { ...b, span: Math.max(1, b.span - 1) } : b
             ),
           }
         : prev
     );
   };
 
-  // Grow/shrink the block's start (top edge): shifts the start hour earlier
-  // or later along `hours`, and adjusts hourSpan to keep the end fixed.
+  // Grow/shrink the block's start (top edge): shifts the start slot earlier
+  // or later along `slots`, and adjusts span to keep the end fixed.
   const growStart = (id: string) => {
     setPlan((prev) => {
       if (!prev) return prev;
@@ -183,9 +170,10 @@ export default function PlannerApp() {
         ...prev,
         blocks: prev.blocks.map((b) => {
           if (b.id !== id) return b;
-          const startIdx = hours.indexOf(b.hour);
+          const startIdx = slotIndex(slots, b.hour, b.half);
           if (startIdx <= 0) return b;
-          return { ...b, hour: hours[startIdx - 1], hourSpan: b.hourSpan + 1 };
+          const prevSlot = slots[startIdx - 1];
+          return { ...b, hour: prevSlot.hour, half: prevSlot.half, span: b.span + 1 };
         }),
       };
     });
@@ -197,9 +185,10 @@ export default function PlannerApp() {
       return {
         ...prev,
         blocks: prev.blocks.map((b) => {
-          if (b.id !== id || b.hourSpan <= 1) return b;
-          const startIdx = hours.indexOf(b.hour);
-          return { ...b, hour: hours[startIdx + 1], hourSpan: b.hourSpan - 1 };
+          if (b.id !== id || b.span <= 1) return b;
+          const startIdx = slotIndex(slots, b.hour, b.half);
+          const nextSlot = slots[startIdx + 1];
+          return { ...b, hour: nextSlot.hour, half: nextSlot.half, span: b.span - 1 };
         }),
       };
     });
@@ -253,7 +242,6 @@ export default function PlannerApp() {
             blocks={plan.blocks}
             onDropItem={handleDropItem}
             onBlockContentChange={updateBlockContent}
-            onBlockExpandToFullHour={expandToFullHour}
             onBlockGrowEnd={growEnd}
             onBlockShrinkEnd={shrinkEnd}
             onBlockGrowStart={growStart}

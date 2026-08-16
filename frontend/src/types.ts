@@ -6,9 +6,8 @@ export interface BrainDumpItem {
 export interface TimeBlock {
   id: string;
   hour: number; // 0-23, start hour
-  half: 0 | 30; // which half-hour column it starts in
-  isFullHour: boolean; // false: occupies just the one 30-min cell (hour, half)
-  hourSpan: number; // only meaningful when isFullHour is true; number of consecutive hour-rows
+  half: 0 | 30; // which half-hour slot it starts in
+  span: number; // length in 30-minute units (1 = 30min, 2 = 1hr, 3 = 1hr30min, ...)
   content: string;
 }
 

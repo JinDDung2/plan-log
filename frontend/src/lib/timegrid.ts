@@ -1,7 +1,12 @@
 import type { TimeBlock } from "@/types";
 
+export interface Slot {
+  hour: number;
+  half: 0 | 30;
+}
+
 // Builds the list of hours (in order, possibly wrapping past midnight)
-// between startHour (inclusive) and endHour (inclusive) using 30-min steps.
+// between startHour (inclusive) and endHour (inclusive).
 export function buildHours(startHour: number, endHour: number): number[] {
   const hours: number[] = [];
   let h = startHour;
@@ -16,31 +21,35 @@ export function buildHours(startHour: number, endHour: number): number[] {
   return hours;
 }
 
+// Flattens the hour range into ordered 30-minute slots, one row per slot.
+export function buildSlots(startHour: number, endHour: number): Slot[] {
+  const slots: Slot[] = [];
+  for (const hour of buildHours(startHour, endHour)) {
+    slots.push({ hour, half: 0 });
+    slots.push({ hour, half: 30 });
+  }
+  return slots;
+}
+
+export function slotIndex(slots: Slot[], hour: number, half: 0 | 30): number {
+  return slots.findIndex((s) => s.hour === hour && s.half === half);
+}
+
 export function hourLabel(hour: number): string {
   return String(hour).padStart(2, "0");
 }
 
-/** Hours covered by full-hour blocks (as hour-of-day values). */
-export function fullHourOccupancy(blocks: TimeBlock[], hours: number[]): Set<number> {
-  const occupied = new Set<number>();
-  for (const block of blocks) {
-    if (!block.isFullHour) continue;
-    const startIdx = hours.indexOf(block.hour);
-    if (startIdx === -1) continue;
-    for (let i = 0; i < block.hourSpan; i++) {
-      const idx = startIdx + i;
-      if (idx < hours.length) occupied.add(hours[idx]);
-    }
-  }
-  return occupied;
-}
-
-export function isHalfSlotOccupied(
+export function isSlotOccupied(
   blocks: TimeBlock[],
-  fullOccupied: Set<number>,
+  slots: Slot[],
   hour: number,
   half: 0 | 30
 ): boolean {
-  if (fullOccupied.has(hour)) return true;
-  return blocks.some((b) => !b.isFullHour && b.hour === hour && b.half === half);
+  const idx = slotIndex(slots, hour, half);
+  if (idx === -1) return false;
+  return blocks.some((b) => {
+    const startIdx = slotIndex(slots, b.hour, b.half);
+    if (startIdx === -1) return false;
+    return idx >= startIdx && idx < startIdx + b.span;
+  });
 }
