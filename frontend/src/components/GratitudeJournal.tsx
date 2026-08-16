@@ -15,7 +15,7 @@ export default function GratitudeJournal({ value, onChange }: Props) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="오늘 하루를 돌아보며 감사한 일을 적어보세요."
-        rows={4}
+        className="h-[12.5rem] resize-none"
       />
     </div>
   );

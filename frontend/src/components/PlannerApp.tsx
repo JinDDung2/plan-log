@@ -246,12 +246,14 @@ export default function PlannerApp() {
               onChange={updateBigThree}
               onDropItem={handleDropToBigThree}
             />
-            <BrainDump
-              items={plan.brainDumpItems}
-              onAdd={addBrainDumpItem}
-              onRemove={removeBrainDumpItem}
-            />
-            <GratitudeJournal value={plan.gratitude} onChange={updateGratitude} />
+            <div className="flex flex-col gap-2">
+              <BrainDump
+                items={plan.brainDumpItems}
+                onAdd={addBrainDumpItem}
+                onRemove={removeBrainDumpItem}
+              />
+              <GratitudeJournal value={plan.gratitude} onChange={updateGratitude} />
+            </div>
           </div>
           <TimeGrid
             startHour={settings.startHour}
