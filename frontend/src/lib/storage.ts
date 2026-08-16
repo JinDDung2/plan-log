@@ -14,6 +14,7 @@ export function loadPlan(date: string): DailyPlan {
       bigThree: parsed.bigThree ?? ["", "", ""],
       brainDumpItems: parsed.brainDumpItems ?? [],
       blocks: parsed.blocks ?? [],
+      gratitude: parsed.gratitude ?? "",
     };
   } catch {
     return emptyPlan(date);
