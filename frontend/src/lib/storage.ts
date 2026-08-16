@@ -8,12 +8,12 @@ export function loadPlan(date: string): DailyPlan {
   try {
     const raw = localStorage.getItem(PLAN_PREFIX + date);
     if (!raw) return emptyPlan(date);
-    const parsed = JSON.parse(raw) as DailyPlan;
+    const parsed = JSON.parse(raw) as Partial<DailyPlan>;
     return {
       date,
       bigThree: parsed.bigThree ?? ["", "", ""],
-      brainDump: parsed.brainDump ?? "",
-      timeSlots: parsed.timeSlots ?? {},
+      brainDumpItems: parsed.brainDumpItems ?? [],
+      blocks: parsed.blocks ?? [],
     };
   } catch {
     return emptyPlan(date);

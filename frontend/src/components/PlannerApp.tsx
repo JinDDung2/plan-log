@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import type { DailyPlan, PlannerSettings } from "@/types";
 import { addDays, todayKey } from "@/lib/date";
 import { loadPlan, savePlan, loadSettings, saveSettings } from "@/lib/storage";
+import { buildHours } from "@/lib/timegrid";
+import { newId } from "@/lib/id";
 import DateNav from "@/components/DateNav";
 import BigThree from "@/components/BigThree";
 import BrainDump from "@/components/BrainDump";
@@ -41,6 +43,8 @@ export default function PlannerApp() {
 
   if (!plan || !settings) return null;
 
+  const hours = buildHours(settings.startHour, settings.endHour);
+
   const updateBigThree = (index: number, value: string) => {
     setPlan((prev) => {
       if (!prev) return prev;
@@ -50,14 +54,140 @@ export default function PlannerApp() {
     });
   };
 
-  const updateBrainDump = (value: string) => {
-    setPlan((prev) => (prev ? { ...prev, brainDump: value } : prev));
+  const addBrainDumpItem = (text: string) => {
+    setPlan((prev) =>
+      prev
+        ? {
+            ...prev,
+            brainDumpItems: [...prev.brainDumpItems, { id: newId(), text }],
+          }
+        : prev
+    );
   };
 
-  const updateSlot = (key: string, value: string) => {
+  const removeBrainDumpItem = (id: string) => {
     setPlan((prev) =>
-      prev ? { ...prev, timeSlots: { ...prev.timeSlots, [key]: value } } : prev
+      prev
+        ? {
+            ...prev,
+            brainDumpItems: prev.brainDumpItems.filter((i) => i.id !== id),
+          }
+        : prev
     );
+  };
+
+  const handleDropItem = (hour: number, half: 0 | 30, itemId: string) => {
+    setPlan((prev) => {
+      if (!prev) return prev;
+      const item = prev.brainDumpItems.find((i) => i.id === itemId);
+      if (!item) return prev;
+      return {
+        ...prev,
+        brainDumpItems: prev.brainDumpItems.filter((i) => i.id !== itemId),
+        blocks: [
+          ...prev.blocks,
+          {
+            id: newId(),
+            hour,
+            half,
+            isFullHour: false,
+            hourSpan: 1,
+            content: item.text,
+          },
+        ],
+      };
+    });
+  };
+
+  const updateBlockContent = (id: string, content: string) => {
+    setPlan((prev) =>
+      prev
+        ? {
+            ...prev,
+            blocks: prev.blocks.map((b) => (b.id === id ? { ...b, content } : b)),
+          }
+        : prev
+    );
+  };
+
+  const deleteBlock = (id: string) => {
+    setPlan((prev) =>
+      prev ? { ...prev, blocks: prev.blocks.filter((b) => b.id !== id) } : prev
+    );
+  };
+
+  const expandToFullHour = (id: string) => {
+    setPlan((prev) =>
+      prev
+        ? {
+            ...prev,
+            blocks: prev.blocks.map((b) =>
+              b.id === id ? { ...b, isFullHour: true, hourSpan: 1 } : b
+            ),
+          }
+        : prev
+    );
+  };
+
+  // Grow/shrink the block's end (bottom edge): moves through `hours` in
+  // display order so wrap-around past midnight stays correct.
+  const growEnd = (id: string) => {
+    setPlan((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        blocks: prev.blocks.map((b) => {
+          if (b.id !== id) return b;
+          const startIdx = hours.indexOf(b.hour);
+          const maxSpan = hours.length - startIdx;
+          return { ...b, hourSpan: Math.min(b.hourSpan + 1, maxSpan) };
+        }),
+      };
+    });
+  };
+
+  const shrinkEnd = (id: string) => {
+    setPlan((prev) =>
+      prev
+        ? {
+            ...prev,
+            blocks: prev.blocks.map((b) =>
+              b.id === id ? { ...b, hourSpan: Math.max(1, b.hourSpan - 1) } : b
+            ),
+          }
+        : prev
+    );
+  };
+
+  // Grow/shrink the block's start (top edge): shifts the start hour earlier
+  // or later along `hours`, and adjusts hourSpan to keep the end fixed.
+  const growStart = (id: string) => {
+    setPlan((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        blocks: prev.blocks.map((b) => {
+          if (b.id !== id) return b;
+          const startIdx = hours.indexOf(b.hour);
+          if (startIdx <= 0) return b;
+          return { ...b, hour: hours[startIdx - 1], hourSpan: b.hourSpan + 1 };
+        }),
+      };
+    });
+  };
+
+  const shrinkStart = (id: string) => {
+    setPlan((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        blocks: prev.blocks.map((b) => {
+          if (b.id !== id || b.hourSpan <= 1) return b;
+          const startIdx = hours.indexOf(b.hour);
+          return { ...b, hour: hours[startIdx + 1], hourSpan: b.hourSpan - 1 };
+        }),
+      };
+    });
   };
 
   return (
@@ -92,13 +222,24 @@ export default function PlannerApp() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-6">
             <BigThree values={plan.bigThree} onChange={updateBigThree} />
-            <BrainDump value={plan.brainDump} onChange={updateBrainDump} />
+            <BrainDump
+              items={plan.brainDumpItems}
+              onAdd={addBrainDumpItem}
+              onRemove={removeBrainDumpItem}
+            />
           </div>
           <TimeGrid
             startHour={settings.startHour}
             endHour={settings.endHour}
-            timeSlots={plan.timeSlots}
-            onSlotChange={updateSlot}
+            blocks={plan.blocks}
+            onDropItem={handleDropItem}
+            onBlockContentChange={updateBlockContent}
+            onBlockExpandToFullHour={expandToFullHour}
+            onBlockGrowEnd={growEnd}
+            onBlockShrinkEnd={shrinkEnd}
+            onBlockGrowStart={growStart}
+            onBlockShrinkStart={shrinkStart}
+            onBlockDelete={deleteBlock}
           />
         </div>
       </div>
