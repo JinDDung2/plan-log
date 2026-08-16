@@ -16,6 +16,7 @@ export interface DailyPlan {
   bigThree: [string, string, string];
   brainDumpItems: BrainDumpItem[];
   blocks: TimeBlock[];
+  gratitude: string; // 하루 마무리 감사일기, 자유 텍스트
 }
 
 export interface PlannerSettings {
@@ -34,5 +35,6 @@ export function emptyPlan(date: string): DailyPlan {
     bigThree: ["", "", ""],
     brainDumpItems: [],
     blocks: [],
+    gratitude: "",
   };
 }

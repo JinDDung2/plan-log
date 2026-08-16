@@ -40,7 +40,7 @@ export default function BrainDump({ items, onAdd, onRemove }: Props) {
         />
         <Button type="submit">추가</Button>
       </form>
-      <div className="flex-1 min-h-[220px] border-2 border-gray-800 rounded bg-white/40 p-2 flex flex-col gap-2 overflow-y-auto">
+      <div className="flex-1 min-h-[120px] border-2 border-gray-800 rounded bg-white/40 p-2 flex flex-col gap-2 overflow-y-auto">
         {items.length === 0 && (
           <p className="text-sm text-gray-500 p-2">
             할 일을 추가한 뒤, 오른쪽 시간표로 드래그해서 배치하세요.

@@ -9,6 +9,7 @@ import { newId } from "@/lib/id";
 import DateNav from "@/components/DateNav";
 import BigThree from "@/components/BigThree";
 import BrainDump from "@/components/BrainDump";
+import GratitudeJournal from "@/components/GratitudeJournal";
 import TimeGrid from "@/components/TimeGrid";
 import SettingsPanel from "@/components/SettingsPanel";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,10 @@ export default function PlannerApp() {
           }
         : prev
     );
+  };
+
+  const updateGratitude = (value: string) => {
+    setPlan((prev) => (prev ? { ...prev, gratitude: value } : prev));
   };
 
   // Dropping a Brain Dump card onto the grid copies its text into a new
@@ -235,6 +240,7 @@ export default function PlannerApp() {
               onAdd={addBrainDumpItem}
               onRemove={removeBrainDumpItem}
             />
+            <GratitudeJournal value={plan.gratitude} onChange={updateGratitude} />
           </div>
           <TimeGrid
             startHour={settings.startHour}
