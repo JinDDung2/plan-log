@@ -37,7 +37,7 @@
    - scope: `frontend`, `backend`, `docs` (특정 영역이 아니면 생략 가능)
    - 예: `feat(frontend): Big3 입력 컴포넌트 추가`, `fix(backend): 플랜 조회 쿼리 조건 오류 수정`, `docs: ADR 0001 작성`
 4. PR은 `.github/PULL_REQUEST_TEMPLATE.md` 양식을 따른다 (변경 이유, 영향 범위 명시. 제목은 커밋 컨벤션과 동일하게 `type(scope): 설명`). 이슈는 `.github/ISSUE_TEMPLATE/task.md` 양식을 따르고, 제목은 `[영역/타입] 설명` 형식을 쓴다 (예: `[Frontend/Feat] Big3 드래그 배치`, `[Backend/Fix] 플랜 조회 쿼리 오류`).
-5. 브랜치는 `main`, `develop` 두 개만 쓴다. `develop → main` PR은 아래 조건을 모두 만족해야 병합한다.
+5. 브랜치는 `main`, `develop` 두 개만 쓴다. 기능/수정 브랜치(`feature/*`, `fix/*`, `refactor/*` 등)는 항상 `develop`을 대상으로 PR을 연다. `main`으로의 병합은 오직 `develop → main` PR로만 가능하다. `develop → main` PR은 아래 조건을 모두 만족해야 병합한다.
    - `npm run build`, `npm run lint`, 타입체크가 모두 통과한 상태 (PR 본문에 결과 명시)
    - Vercel Preview 배포로 실제 화면 동작을 확인함
    - PR 작성자 본인이 diff 전체를 한 번 리뷰함 (`git diff main...develop`)
