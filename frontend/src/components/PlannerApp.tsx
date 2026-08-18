@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import type { DailyPlan, PlannerSettings } from "@/types";
 import { addDays, todayKey } from "@/lib/date";
 import { loadPlan, savePlan, loadSettings, saveSettings } from "@/lib/storage";
+import { fetchPlan, savePlanRemote } from "@/lib/planApi";
+import { updateUserSettings } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { buildSlots, slotIndex } from "@/lib/timegrid";
 import { newId } from "@/lib/id";
 import DateNav from "@/components/DateNav";
@@ -12,6 +15,7 @@ import BrainDump from "@/components/BrainDump";
 import GratitudeJournal from "@/components/GratitudeJournal";
 import TimeGrid from "@/components/TimeGrid";
 import SettingsPanel from "@/components/SettingsPanel";
+import AuthHeader from "@/components/AuthHeader";
 import { Button } from "@/components/ui/button";
 
 export default function PlannerApp() {
@@ -19,28 +23,64 @@ export default function PlannerApp() {
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [settings, setSettings] = useState<PlannerSettings | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const { user, loading: authLoading, logout } = useAuth();
 
   // localStorage isn't available during SSR, so state starts empty and is
   // hydrated client-side after mount. This is an intentional exception to
   // react-hooks/set-state-in-effect: there is no way to read browser storage
-  // before the client render.
+  // before the client render. Logged-in users get their settings from the
+  // backend (synced across devices) instead of localStorage.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (authLoading) return;
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSettings({ startHour: user.startHour, endHour: user.endHour });
+      return;
+    }
     setSettings(loadSettings());
-  }, []);
+  }, [user, authLoading]);
 
+  // Same split for plan data: logged-in users read/write through the backend
+  // API so plans sync across devices; guests keep the existing localStorage
+  // behavior so the app still works without an account.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (authLoading) return;
+    if (user) {
+      let cancelled = false;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPlan(null);
+      fetchPlan(date).then((remote) => {
+        if (!cancelled) setPlan(remote);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
     setPlan(loadPlan(date));
-  }, [date]);
+  }, [date, user, authLoading]);
 
   useEffect(() => {
-    if (plan) savePlan(plan);
-  }, [plan]);
+    if (!plan) return;
+    if (user) {
+      const timer = setTimeout(() => {
+        const { bigThree, brainDumpItems, blocks, gratitude } = plan;
+        savePlanRemote(plan.date, { bigThree, brainDumpItems, blocks, gratitude }).catch(
+          () => {}
+        );
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    savePlan(plan);
+  }, [plan, user]);
 
   useEffect(() => {
-    if (settings) saveSettings(settings);
-  }, [settings]);
+    if (!settings) return;
+    if (user) {
+      updateUserSettings(settings.startHour, settings.endHour).catch(() => {});
+      return;
+    }
+    saveSettings(settings);
+  }, [settings, user]);
 
   if (!plan || !settings) return null;
 
@@ -217,6 +257,7 @@ export default function PlannerApp() {
             <Button variant="ghost" onClick={() => setShowSettings((s) => !s)}>
               시간 설정
             </Button>
+            <AuthHeader user={user} loading={authLoading} onLogout={logout} />
           </div>
         </header>
 
