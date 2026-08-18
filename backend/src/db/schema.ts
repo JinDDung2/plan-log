@@ -19,6 +19,8 @@ export const users = mysqlTable(
     email: varchar("email", { length: 255 }).notNull(),
     name: varchar("name", { length: 100 }).notNull(),
     picture: varchar("picture", { length: 512 }),
+    startHour: int("start_hour").notNull().default(5), // 타임그리드 시작 시(0-23)
+    endHour: int("end_hour").notNull().default(23), // 타임그리드 종료 시(0-23)
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => [
