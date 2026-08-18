@@ -114,6 +114,35 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       email: user.email,
       name: user.name,
       picture: user.picture,
+      startHour: user.startHour,
+      endHour: user.endHour,
     });
   });
+
+  app.put<{ Body: { startHour: number; endHour: number } }>(
+    "/me/settings",
+    {
+      preHandler: app.authenticate,
+      schema: {
+        body: {
+          type: "object",
+          required: ["startHour", "endHour"],
+          additionalProperties: false,
+          properties: {
+            startHour: { type: "integer", minimum: 0, maximum: 23 },
+            endHour: { type: "integer", minimum: 0, maximum: 23 },
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const { startHour, endHour } = req.body;
+      await db
+        .update(users)
+        .set({ startHour, endHour })
+        .where(eq(users.id, req.user.sub));
+
+      return reply.send({ startHour, endHour });
+    }
+  );
 }
