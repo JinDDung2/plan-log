@@ -21,4 +21,15 @@ export const env = {
   port: Number(process.env.PORT ?? 4000),
   frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:3000",
   databaseUrl: required("DATABASE_URL"),
+  jwtSecret: required("JWT_SECRET"),
+  google: {
+    clientId: required("GOOGLE_CLIENT_ID"),
+    clientSecret: required("GOOGLE_CLIENT_SECRET"),
+    redirectUri: required("GOOGLE_REDIRECT_URI"),
+  },
+  kakao: {
+    clientId: required("KAKAO_CLIENT_ID"),
+    clientSecret: required("KAKAO_CLIENT_SECRET"),
+    redirectUri: required("KAKAO_REDIRECT_URI"),
+  },
 };
